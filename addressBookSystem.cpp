@@ -42,6 +42,18 @@ public:
         email = mail;
         cout << "Contact updated successfully.\n";
     }
+
+    void deleteContact() {
+        firstName = "";
+        lastName = "";
+        address = "";
+        city = "";
+        state = "";
+        zip = 0;
+        phoneNumber = 0;
+        email = "";
+        cout << "Contact deleted successfully.\n";
+    }
 };
 
 string trim(const string& str) {
@@ -125,6 +137,34 @@ public:
             cout << "Contact with name " << name << " not found.\n";
         }
     }
+
+    void deleteContact(string name) {
+        name = trim(name);  
+        name = toLowerCase(name); 
+
+        bool found = false;
+        for (auto it = contacts.begin(); it != contacts.end(); ++it) {
+            string fullName = it->getFullName();
+            string firstName = it->getFirstName();
+            string lastName = it->getLastName();
+
+            string fullNameLower = toLowerCase(fullName);
+            string firstNameLower = toLowerCase(firstName);
+            string lastNameLower = toLowerCase(lastName);
+
+            if (fullNameLower.find(name) != string::npos || firstNameLower.find(name) != string::npos || lastNameLower.find(name) != string::npos) {
+                cout << "Found contact: " << fullName << endl;
+                it->deleteContact();
+                contacts.erase(it); 
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            cout << "Contact with name " << name << " not found.\n";
+        }
+    }
 };
 
 int main() {
@@ -177,6 +217,24 @@ int main() {
 
         cout << "Do you want to edit another contact? (y/n): ";
         cin >> editMore;
+        cin.ignore(); 
+    }
+
+
+    char deleteMore = 'y';
+    while (deleteMore == 'y' || deleteMore == 'Y') {
+        string name;
+        cout << "\nEnter the full name of the contact to delete: ";
+        cin.ignore();  
+        getline(cin, name);
+
+        addressBook->deleteContact(name);
+
+        cout << "\nUpdated Address Book:\n";
+        addressBook->displayAllContacts();
+
+        cout << "Do you want to delete another contact? (y/n): ";
+        cin >> deleteMore;
         cin.ignore(); 
     }
 
