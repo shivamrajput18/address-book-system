@@ -1,8 +1,9 @@
 #include <iostream>
+#include <vector>
 #include <string>
 using namespace std;
 
-class Contacts {
+class Contact {
 private:
     string firstName;
     string lastName;
@@ -14,10 +15,10 @@ private:
     string email;
 
 public:
-    Contacts(string fName, string lName, string addr, string cty, string st, int z, long long phone, string mail)
+    Contact(string fName, string lName, string addr, string cty, string st, int z, long long phone, string mail)
         : firstName(fName), lastName(lName), address(addr), city(cty), state(st), zip(z), phoneNumber(phone), email(mail) {}
 
-    void displayContact() {
+    void displayContact() const {
         cout << "Name: " << firstName << " " << lastName << endl;
         cout << "Address: " << address << ", " << city << ", " << state << ", " << zip << endl;
         cout << "Phone Number: " << phoneNumber << endl;
@@ -25,15 +26,70 @@ public:
     }
 };
 
+class AddressBook {
+private:
+    vector<Contact> contacts; 
+
+public:
+    void addContact(string fName, string lName, string addr, string cty, string st, int z, long long phone, string mail) {
+        Contact newContact(fName, lName, addr, cty, st, z, phone, mail); 
+        contacts.push_back(newContact); 
+        cout << "Contact added successfully.\n";
+    }
+
+    void displayAllContacts() const {
+        if (contacts.empty()) {
+            cout << "Address Book is empty.\n";
+            return;
+        }
+
+        cout << "\nAddress Book Contacts:\n";
+        for (const auto& contact : contacts) {
+            contact.displayContact();
+            cout << "-----------------------------\n";
+        }
+    }
+};
+
 int main() {
-    cout << "Welcome to Address Book Program" << endl;
+    cout << "Welcome to Address Book Program\n";
 
-    Contacts* contact1 = new Contacts("John", "Doe", "123 Main St", "New York", "NY", 10001, 1234567890, "john.doe@example.com");
-    
-    cout << "\nContact Details:\n";
-    contact1->displayContact();
+    AddressBook* addressBook = new AddressBook();
+    char addMore = 'y';
 
-    delete contact1;
+    while (addMore == 'y' || addMore == 'Y') {
+        string fName, lName, addr, cty, st, mail;
+        int z;
+        long long phone;
+
+        cout << "Enter First Name: ";
+        cin >> fName;
+        cout << "Enter Last Name: ";
+        cin >> lName;
+        cout << "Enter Address: ";
+        cin.ignore(); 
+        getline(cin, addr);
+        cout << "Enter City: ";
+        cin >> cty;
+        cout << "Enter State: ";
+        cin >> st;
+        cout << "Enter ZIP Code: ";
+        cin >> z;
+        cout << "Enter Phone Number: ";
+        cin >> phone;
+        cout << "Enter Email: ";
+        cin >> mail;
+
+        addressBook->addContact(fName, lName, addr, cty, st, z, phone, mail);
+
+        cout << "Do you want to add another contact? (y/n): ";
+        cin >> addMore;
+    }
+
+    cout << "\nNow displaying all contacts in the Address Book:\n";
+    addressBook->displayAllContacts();
+
+    delete addressBook;
 
     return 0;
 }
