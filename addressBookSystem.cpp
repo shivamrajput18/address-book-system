@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <unordered_map>
 using namespace std;
 
 class Contact {
@@ -26,10 +27,6 @@ public:
         cout << "Email: " << email << endl;
     }
 
-    string getFullName() const {
-        return firstName + " " + lastName;
-    }
-
     string getFirstName() const { return firstName; }
     string getLastName() const { return lastName; }
 
@@ -42,31 +39,7 @@ public:
         email = mail;
         cout << "Contact updated successfully.\n";
     }
-
-    void deleteContact() {
-        firstName = "";
-        lastName = "";
-        address = "";
-        city = "";
-        state = "";
-        zip = 0;
-        phoneNumber = 0;
-        email = "";
-        cout << "Contact deleted successfully.\n";
-    }
 };
-
-string trim(const string& str) {
-    size_t first = str.find_first_not_of(' ');
-    size_t last = str.find_last_not_of(' ');
-    return (first == string::npos || last == string::npos) ? "" : str.substr(first, last - first + 1);
-}
-
-string toLowerCase(const string& str) {
-    string lowerStr = str;
-    transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
-    return lowerStr;
-}
 
 class AddressBook {
 private:
@@ -74,9 +47,17 @@ private:
 
 public:
     void addContact(string fName, string lName, string addr, string cty, string st, int z, long long phone, string mail) {
-        Contact newContact(fName, lName, addr, cty, st, z, phone, mail);
-        contacts.push_back(newContact);
+        contacts.emplace_back(fName, lName, addr, cty, st, z, phone, mail);
         cout << "Contact added successfully.\n";
+    }
+
+    Contact* findContact(const string& fName, const string& lName) {
+        for (auto& contact : contacts) {
+            if (contact.getFirstName() == fName && contact.getLastName() == lName) {
+                return &contact;
+            }
+        }    
+        return nullptr;
     }
 
     void displayAllContacts() const {
@@ -84,161 +65,166 @@ public:
             cout << "Address Book is empty.\n";
             return;
         }
-
-        cout << "\nAddress Book Contacts:\n";
+        cout << "\nContacts:\n";
         for (const auto& contact : contacts) {
             contact.displayContact();
             cout << "-----------------------------\n";
         }
     }
+};
 
-    void editContact(string name) {
-        name = trim(name);  
-        name = toLowerCase(name); 
+class AddressBookSystem {
+private:
+    unordered_map<string, AddressBook> addressBooks;
 
-        bool found = false;
-        for (auto& contact : contacts) {
-            string fullName = contact.getFullName();
-            string firstName = contact.getFirstName();
-            string lastName = contact.getLastName();
-
-            string fullNameLower = toLowerCase(fullName);
-            string firstNameLower = toLowerCase(firstName);
-            string lastNameLower = toLowerCase(lastName);
-
-            if (fullNameLower.find(name) != string::npos || firstNameLower.find(name) != string::npos || lastNameLower.find(name) != string::npos) {
-                cout << "Found contact: " << fullName << endl;
-                string addr, cty, st, mail;
-                int z;
-                long long phone;
-
-                cout << "Enter new details for " << fullName << ":\n";
-                cout << "Enter Address: ";
-                cin.ignore(); 
-                getline(cin, addr);
-                cout << "Enter City: ";
-                cin >> cty;
-                cout << "Enter State: ";
-                cin >> st;
-                cout << "Enter ZIP Code: ";
-                cin >> z;
-                cout << "Enter Phone Number: ";
-                cin >> phone;
-                cout << "Enter Email: ";
-                cin >> mail;
-
-                contact.editContact(addr, cty, st, z, phone, mail);
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            cout << "Contact with name " << name << " not found.\n";
+public:
+    void createAddressBook(const string& name) {
+        if (addressBooks.find(name) != addressBooks.end()) {
+            cout << "Address Book with name '" << name << "' already exists.\n";
+        } else {
+            addressBooks[name] = AddressBook();
+            cout << "Address Book '" << name << "' created successfully.\n";
         }
     }
 
-    void deleteContact(string name) {
-        name = trim(name);  
-        name = toLowerCase(name); 
-
-        bool found = false;
-        for (auto it = contacts.begin(); it != contacts.end(); ++it) {
-            string fullName = it->getFullName();
-            string firstName = it->getFirstName();
-            string lastName = it->getLastName();
-
-            string fullNameLower = toLowerCase(fullName);
-            string firstNameLower = toLowerCase(firstName);
-            string lastNameLower = toLowerCase(lastName);
-
-            if (fullNameLower.find(name) != string::npos || firstNameLower.find(name) != string::npos || lastNameLower.find(name) != string::npos) {
-                cout << "Found contact: " << fullName << endl;
-                it->deleteContact();
-                contacts.erase(it); 
-                found = true;
-                break;
-            }
+    AddressBook* getAddressBook(const string& name) {
+        if (addressBooks.find(name) != addressBooks.end()) {
+            return &addressBooks[name];
+        } else {
+            cout << "Address Book '" << name << "' does not exist.\n";
+            return nullptr;
         }
+    }
 
-        if (!found) {
-            cout << "Contact with name " << name << " not found.\n";
+    void displayAllAddressBooks() const {
+        if (addressBooks.empty()) {
+            cout << "No Address Books available.\n";
+        } else {
+            cout << "Available Address Books:\n";
+            for (const auto& pair : addressBooks) {
+                cout << "- " << pair.first << endl;
+            }
         }
     }
 };
 
 int main() {
-    cout << "Welcome to Address Book Program\n";
+    AddressBookSystem system;
+    char choice;
 
-    AddressBook* addressBook = new AddressBook();
-    char addMore = 'y';
+    do {
+        cout << "\nAddress Book System Menu:\n";
+        cout << "1. Create New Address Book\n";
+        cout << "2. Add Contact to Address Book\n";
+        cout << "3. Display All Contacts in an Address Book\n";
+        cout << "4. Edit Contact in an Address Book\n";
+        cout << "5. Display All Address Books\n";
+        cout << "6. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-    while (addMore == 'y' || addMore == 'Y') {
-        string fName, lName, addr, cty, st, mail;
-        int z;
-        long long phone;
+        switch (choice) {
+            case '1': {
+                string name;
+                cout << "Enter Address Book Name: ";
+                cin >> name;
+                system.createAddressBook(name);
+                break;
+            }
+            case '2': {
+                string name;
+                cout << "Enter Address Book Name: ";
+                cin >> name;
+                AddressBook* book = system.getAddressBook(name);
+                if (book) {
+                    string fName, lName, addr, cty, st, mail;
+                    int z;
+                    long long phone;
 
-        cout << "Enter First Name: ";
-        cin >> fName;
-        cout << "Enter Last Name: ";
-        cin >> lName;
-        cout << "Enter Address: ";
-        cin.ignore(); 
-        getline(cin, addr);
-        cout << "Enter City: ";
-        cin >> cty;
-        cout << "Enter State: ";
-        cin >> st;
-        cout << "Enter ZIP Code: ";
-        cin >> z;
-        cout << "Enter Phone Number: ";
-        cin >> phone;
-        cout << "Enter Email: ";
-        cin >> mail;
+                    cout << "Enter First Name: ";
+                    cin >> fName;
+                    cout << "Enter Last Name: ";
+                    cin >> lName;
+                    cout << "Enter Address: ";
+                    cin.ignore();
+                    getline(cin, addr);
+                    cout << "Enter City: ";
+                    cin >> cty;
+                    cout << "Enter State: ";
+                    cin >> st;
+                    cout << "Enter ZIP Code: ";
+                    cin >> z;
+                    cout << "Enter Phone Number: ";
+                    cin >> phone;
+                    cout << "Enter Email: ";
+                    cin >> mail;
 
-        addressBook->addContact(fName, lName, addr, cty, st, z, phone, mail);
+                    book->addContact(fName, lName, addr, cty, st, z, phone, mail);
+                }
+                break;
+            }
+            case '3': {
+                string name;
+                cout << "Enter Address Book Name: ";
+                cin >> name;
+                AddressBook* book = system.getAddressBook(name);
+                if (book) {
+                    book->displayAllContacts();
+                }
+                break;
+            }
+            case '4': {
+                string name;
+                cout << "Enter Address Book Name: ";
+                cin >> name;
+                AddressBook* book = system.getAddressBook(name);
+                if (book) {
+                    string fName, lName;
+                    cout << "Enter First Name of the Contact: ";
+                    cin >> fName;
+                    cout << "Enter Last Name of the Contact: ";
+                    cin >> lName;
 
-        cout << "Do you want to add another contact? (y/n): ";
-        cin >> addMore;
-        cin.ignore(); 
-    }
+                    Contact* contact = book->findContact(fName, lName);
+                    if (contact) {
+                        string addr, cty, st, mail;
+                        int z;
+                        long long phone;
 
-    cout << "\nNow displaying all contacts in the Address Book:\n";
-    addressBook->displayAllContacts();
+                        cout << "Enter New Address: ";
+                        cin.ignore();
+                        getline(cin, addr);
+                        cout << "Enter New City: ";
+                        cin >> cty;
+                        cout << "Enter New State: ";
+                        cin >> st;
+                        cout << "Enter New ZIP Code: ";
+                        cin >> z;
+                        cout << "Enter New Phone Number: ";
+                        cin >> phone;
+                        cout << "Enter New Email: ";
+                        cin >> mail;
 
-    char editMore = 'y';
-    while (editMore == 'y' || editMore == 'Y') {
-        string name;
-        cout << "\nEnter the full name of the contact to edit (First Last), or just First or Last name: ";
-        cin.ignore();  
-        getline(cin, name);
+                        contact->editContact(addr, cty, st, z, phone, mail);
 
-        addressBook->editContact(name); 
-
-        cout << "Do you want to edit another contact? (y/n): ";
-        cin >> editMore;
-        cin.ignore(); 
-    }
-
-
-    char deleteMore = 'y';
-    while (deleteMore == 'y' || deleteMore == 'Y') {
-        string name;
-        cout << "\nEnter the full name of the contact to delete: ";
-        cin.ignore();  
-        getline(cin, name);
-
-        addressBook->deleteContact(name);
-
-        cout << "\nUpdated Address Book:\n";
-        addressBook->displayAllContacts();
-
-        cout << "Do you want to delete another contact? (y/n): ";
-        cin >> deleteMore;
-        cin.ignore(); 
-    }
-
-    delete addressBook;
+                        cout << "Updated Contact Details:\n";
+                        contact->displayContact();
+                    } else {
+                        cout << "Contact not found.\n";
+                    }
+                }
+                break;
+            }
+            case '5':
+                system.displayAllAddressBooks();
+                break;
+            case '6':
+                cout << "Exiting the program.\n";
+                break;
+            default:
+                cout << "Invalid choice.\n";
+        }
+    } while (choice != '6');
 
     return 0;
 }
